@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use App\Contact;
 
 /*
@@ -19,20 +18,33 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 	return $request->user();
 });
 
-Route::group(['middleware' => 'api'], function(){
-	Route::get('contacts', function(){
-		return  DB::table('contacts')->orderBy('created_at', 'desc')->get();
-	});
+Route::get('contacts', function(){
+	return Contact::orderBy('created_at','desc')->get();
+});
 
-	Route::get('contact/{id}', function($id){
-		return (DB::table('contacts')->find($id));
-	});
+Route::get('contact/{id}', function($id){
+	return Contact::findOrFail($id);
+});
 
-	Route::post('contact/store', function(Request $request){
-		$contact = new Contact();
-		$contact->name = $request->name;
-		$contact->email = $request->email;
-		$contact->phone = $request->phone;
-		$contact->save();
-	});
+Route::post('contact/store', function(Request $request){
+	$request->validate([
+        'name' => 'required',
+        'email' => 'required',
+        'phone' => 'required',
+    ]);
+	return Contact::create(['name' => $request->name, 'email' => $request->email, 'phone' => $request->phone]);
+});
+
+Route::patch('contact/{id}', function(Request $request, $id){
+	$request->validate([
+        'name' => 'required',
+        'email' => 'required',
+        'phone' => 'required',
+    ]);
+    Contact::findOrFail($id)->update(['name' => $request->input(['name']), 'email' => $request->input(['email']), 'phone' => $request->input(['phone'])]);
+    return Contact::findOrFail($id);
+});
+
+Route::delete('contact/{id}', function($id){
+	return Contact::destroy($id);
 });
